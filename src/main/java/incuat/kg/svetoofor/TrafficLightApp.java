@@ -330,42 +330,41 @@ public class TrafficLightApp extends Application {
     }
 
     private void blinkColor(Circle circle, Color color, int seconds, String colorName) {
-        // Если включается зеленый и есть активный инцидент (красный горит) - это разрешение инцидента
-        if (colorName.equals("green") && isIncidentActive) {
-            // Останавливаем красный таймер
+        // Если зажигается зеленый в кружке инцидента (решение инцидента)
+        if (colorName.equals("green_incident")) {
+            // Останавливаем красный таймер если он есть
             if (redBlinkTimeline != null) {
                 redBlinkTimeline.stop();
             }
-            // Гасим красный
-            redCircle.setFill(Color.rgb(40, 40, 40));
             isIncidentActive = false;
         }
 
-        // Если зажигается красный и зеленый горит (новый инцидент пока предыдущий разрешается)
-        if (colorName.equals("red") && !greenCircle.getFill().equals(Color.rgb(40, 40, 40))) {
-            // Останавливаем зеленый таймер
-            if (greenBlinkTimeline != null) {
-                greenBlinkTimeline.stop();
+        // Если зажигается зеленый в кружке алерта (решение алерта)
+        if (colorName.equals("green_alert")) {
+            // Останавливаем желтый таймер если он есть
+            if (yellowBlinkTimeline != null) {
+                yellowBlinkTimeline.stop();
             }
-            // Гасим зеленый
-            greenCircle.setFill(Color.rgb(40, 40, 40));
         }
-
-        // Зажигаем нужный цвет
-        circle.setFill(color);
 
         // Если зажигается красный - активируем флаг инцидента
         if (colorName.equals("red")) {
             isIncidentActive = true;
         }
 
-        // Останавливаем предыдущий таймер для этого цвета
-        Timeline existingTimeline = switch (colorName) {
-            case "red" -> redBlinkTimeline;
-            case "yellow" -> yellowBlinkTimeline;
-            case "green" -> greenBlinkTimeline;
-            default -> null;
-        };
+        // Зажигаем нужный цвет
+        circle.setFill(color);
+
+        // Останавливаем предыдущий таймер для этого круга
+        Timeline existingTimeline = null;
+        if (circle == redCircle && redBlinkTimeline != null) {
+            existingTimeline = redBlinkTimeline;
+        } else if (circle == yellowCircle && yellowBlinkTimeline != null) {
+            existingTimeline = yellowBlinkTimeline;
+        } else if (circle == greenCircle && greenBlinkTimeline != null) {
+            existingTimeline = greenBlinkTimeline;
+        }
+
         if (existingTimeline != null) {
             existingTimeline.stop();
         }
@@ -383,11 +382,13 @@ public class TrafficLightApp extends Application {
         timeline.setCycleCount(1);
         timeline.play();
 
-        // Сохраняем таймер
-        switch (colorName) {
-            case "red" -> redBlinkTimeline = timeline;
-            case "yellow" -> yellowBlinkTimeline = timeline;
-            case "green" -> greenBlinkTimeline = timeline;
+        // Сохраняем таймер в зависимости от круга
+        if (circle == redCircle) {
+            redBlinkTimeline = timeline;
+        } else if (circle == yellowCircle) {
+            yellowBlinkTimeline = timeline;
+        } else if (circle == greenCircle) {
+            greenBlinkTimeline = timeline;
         }
     }
 
@@ -408,7 +409,9 @@ public class TrafficLightApp extends Application {
         switch (message) {
             case "RED_BLINK" -> blinkColor(redCircle, Color.RED, 120, "red");
             case "YELLOW_BLINK" -> blinkColor(yellowCircle, Color.YELLOW, 120, "yellow");
-            case "GREEN_BLINK" -> blinkColor(greenCircle, Color.LIMEGREEN, 30, "green");  // 30 секунд для зеленого
+            case "GREEN_BLINK" -> blinkColor(greenCircle, Color.LIMEGREEN, 30, "green");  // 30 секунд для зеленого (третий кружок - очередь)
+            case "GREEN_BLINK_INCIDENT" -> blinkColor(redCircle, Color.LIMEGREEN, 30, "green_incident");  // Зеленый в кружке инцидента
+            case "GREEN_BLINK_ALERT" -> blinkColor(yellowCircle, Color.LIMEGREEN, 30, "green_alert");  // Зеленый в кружке алерта
             case "QUEUE_RED" -> setQueueColor(greenCircle, Color.RED, "queue_red");
             case "QUEUE_GREEN" -> setQueueColor(greenCircle, Color.LIMEGREEN, "queue_green");
         }

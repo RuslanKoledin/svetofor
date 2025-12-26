@@ -144,10 +144,18 @@ public class JiraPoller {
                 System.out.println("✅ Задача решена: " + key + " (тип: " + issueTypeName + ")");
                 System.out.println("   Статус: " + previousStatus + " → " + currentStatus);
 
-                // Отправляем зеленый сигнал ОДИН РАЗ (30 секунд)
+                // Отправляем зеленый сигнал ОДИН РАЗ (30 секунд) в соответствующий кружок
                 if (trafficLightServer != null) {
-                    System.out.println("   🟢 Отправка сигнала: GREEN_BLINK (решение)");
-                    trafficLightServer.broadcast("GREEN_BLINK");
+                    if (isIncident) {
+                        System.out.println("   🟢 Отправка сигнала: GREEN_BLINK_INCIDENT (решение инцидента)");
+                        trafficLightServer.broadcast("GREEN_BLINK_INCIDENT");
+                    } else if (isAlert) {
+                        System.out.println("   🟢 Отправка сигнала: GREEN_BLINK_ALERT (решение алерта)");
+                        trafficLightServer.broadcast("GREEN_BLINK_ALERT");
+                    } else {
+                        System.out.println("   🟢 Отправка сигнала: GREEN_BLINK (решение)");
+                        trafficLightServer.broadcast("GREEN_BLINK");
+                    }
                 }
 
                 return true;
