@@ -317,30 +317,8 @@ public class TrafficLightApp extends Application {
         }
 
         Scene scene = new Scene(root, windowWidth, windowHeight);
-        root.setStyle("-fx-background-color: #000000;");  // Измените #808080 на нужный цвет
+        root.setStyle("-fx-background-color: #000000;");
         stage.setScene(scene);
-
-        // Изменение размера колесиком мыши (Ctrl + колесико)
-        scene.setOnScroll(event -> {
-            if (event.isControlDown()) {
-                // Прокрутка вверх - увеличить, вниз - уменьшить
-                double delta = event.getDeltaY() > 0 ? 1.1 : 0.9;
-
-                // Ограничения: минимум 116x212, максимум 183x339
-                windowWidth = Math.max(116, Math.min(183, (int)(windowWidth * delta)));
-                windowHeight = Math.max(212, Math.min(339, (int)(windowHeight * delta)));
-
-                // Сохраняем новый размер в конфиг
-                saveWindowSize();
-
-                // Пересоздаем окно с новым размером
-                stage.close();
-                showTrafficLightStage();
-
-                System.out.println("Новый размер: " + windowWidth + "x" + windowHeight);
-                event.consume();
-            }
-        });
 
         // Автопозиция в правом нижнем углу
         double screenWidth = Screen.getPrimary().getBounds().getWidth();

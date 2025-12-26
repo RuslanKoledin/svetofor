@@ -240,7 +240,7 @@ public class JiraPoller {
 
     /**
      * Проверка, является ли статус решенным (требует зеленого светофора)
-     * Решенные статусы: В ожидании, Решен, Закрыто, Отклонен
+     * Решенные статусы: В ожидании, Решен, Закрыто, Отклонен, Отменен, Завершен
      */
     private boolean isResolvedStatus(String status) {
         if (status == null) {
@@ -253,11 +253,18 @@ public class JiraPoller {
                statusLower.contains("решен") ||
                statusLower.contains("закрыт") ||
                statusLower.contains("отклонен") ||
+               statusLower.contains("отменен") ||
+               statusLower.contains("завершен") ||
                statusLower.contains("pending") ||
                statusLower.contains("resolved") ||
                statusLower.contains("closed") ||
                statusLower.contains("rejected") ||
-               statusLower.contains("done");
+               statusLower.contains("declined") ||
+               statusLower.contains("canceled") ||
+               statusLower.contains("cancelled") ||
+               statusLower.contains("done") ||
+               statusLower.contains("finished") ||
+               statusLower.contains("completed");
     }
 
     /**
