@@ -31,7 +31,7 @@ Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 ; Задачи (опции при установке)
 [Tasks]
 Name: "desktopicon"; Description: "Создать ярлык на рабочем столе"; GroupDescription: "Дополнительные ярлыки:"; Flags: unchecked
-Name: "startup"; Description: "Запускать при входе в систему"; GroupDescription: "Автозапуск:"; Flags: checked
+Name: "startup"; Description: "Запускать при входе в систему"; GroupDescription: "Автозапуск:"
 
 ; Файлы для установки
 [Files]
