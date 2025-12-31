@@ -181,6 +181,17 @@ public class TrafficLightApp extends Application {
     }
 
     private boolean showLoginDialog() {
+        // Если логин/пароль не заданы - пропускаем авторизацию
+        if (adminLogin == null || adminLogin.isEmpty() || adminPassword == null || adminPassword.isEmpty()) {
+            System.out.println("Предупреждение: учетные данные администратора не настроены!");
+            System.out.println("Установите admin.login и admin.password в client.properties");
+            Alert alert = new Alert(Alert.AlertType.WARNING,
+                "Учетные данные администратора не настроены в client.properties\nПроверьте настройки admin.login и admin.password",
+                ButtonType.OK);
+            alert.showAndWait();
+            return false;
+        }
+
         Dialog<Pair<String, String>> dialog = new Dialog<>();
         dialog.setTitle("Авторизация Админа");
 
@@ -208,9 +219,20 @@ public class TrafficLightApp extends Application {
         });
 
         var result = dialog.showAndWait();
-        return result.isPresent() &&
-                adminLogin.equals(result.get().getKey()) &&
-                adminPassword.equals(result.get().getValue());
+
+        if (result.isPresent()) {
+            String enteredLogin = result.get().getKey();
+            String enteredPassword = result.get().getValue();
+
+            System.out.println("Попытка входа - Логин: " + enteredLogin);
+            System.out.println("Ожидаемый логин: '" + adminLogin + "'");
+            System.out.println("Логин совпадает: " + adminLogin.equals(enteredLogin));
+            System.out.println("Пароль совпадает: " + adminPassword.equals(enteredPassword));
+
+            return adminLogin.equals(enteredLogin) && adminPassword.equals(enteredPassword);
+        }
+
+        return false;
     }
 
     private void showTrafficLightStage() {
@@ -228,6 +250,13 @@ public class TrafficLightApp extends Application {
         stage.initStyle(StageStyle.UNDECORATED);
         stage.setResizable(false); // Запрещаем изменение размера
         stage.setAlwaysOnTop(true); // Окно всегда поверх всех других окон
+
+        // Запрещаем сворачивание окна
+        stage.iconifiedProperty().addListener((obs, wasIconified, isNowIconified) -> {
+            if (isNowIconified) {
+                stage.setIconified(false);
+            }
+        });
 
         // Устанавливаем иконку приложения
         try {
