@@ -258,6 +258,10 @@ public class TrafficLightApp extends Application {
             }
         });
 
+        // Переменные для хранения позиции мыши при перетаскивании
+        final double[] xOffset = {0};
+        final double[] yOffset = {0};
+
         // Устанавливаем иконку приложения
         try {
             javafx.scene.image.Image icon = new javafx.scene.image.Image(getClass().getResourceAsStream("/44_85245.ico"));
@@ -348,6 +352,17 @@ public class TrafficLightApp extends Application {
         Scene scene = new Scene(root, windowWidth, windowHeight);
         root.setStyle("-fx-background-color: #000000;");
         stage.setScene(scene);
+
+        // Добавляем возможность перемещения окна мышью
+        root.setOnMousePressed(event -> {
+            xOffset[0] = event.getSceneX();
+            yOffset[0] = event.getSceneY();
+        });
+
+        root.setOnMouseDragged(event -> {
+            stage.setX(event.getScreenX() - xOffset[0]);
+            stage.setY(event.getScreenY() - yOffset[0]);
+        });
 
         // Автопозиция в правом нижнем углу
         double screenWidth = Screen.getPrimary().getBounds().getWidth();
