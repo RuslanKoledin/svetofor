@@ -35,3 +35,4 @@ Thumbs.db
 # Secrets (НЕ коммитим пароли!)
 # client.properties и server.properties коммитим БЕЗ паролей
 # Реальные пароли только в переменных окружения
+.claude/
