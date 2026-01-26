@@ -17,8 +17,8 @@ public class TrafficLightServer extends WebSocketServer {
     private TrafficLightApp app;
 
     // Хранение текущего состояния светофора для синхронизации новых клиентов
-    private String currentRedState = null;      // RED_BLINK или GREEN_BLINK_INCIDENT или null
-    private String currentYellowState = null;   // YELLOW_BLINK или GREEN_BLINK_ALERT или null
+    // Красный и желтый НЕ сохраняем - они временные (управляются таймерами на клиенте)
+    // Сохраняем только состояние очереди мониторинга
     private String currentQueueState = null;    // QUEUE_RED или QUEUE_GREEN или null
 
     public TrafficLightServer(int port) {
@@ -34,15 +34,8 @@ public class TrafficLightServer extends WebSocketServer {
         clients.add(conn);
         System.out.println("Client connected: " + conn.getRemoteSocketAddress());
 
-        // Отправляем новому клиенту текущее состояние светофора
-        if (currentRedState != null) {
-            conn.send(currentRedState);
-            System.out.println("Sent current red state to new client: " + currentRedState);
-        }
-        if (currentYellowState != null) {
-            conn.send(currentYellowState);
-            System.out.println("Sent current yellow state to new client: " + currentYellowState);
-        }
+        // Отправляем новому клиенту только текущее состояние очереди
+        // Красный и желтый индикаторы не синхронизируем - они временные
         if (currentQueueState != null) {
             conn.send(currentQueueState);
             System.out.println("Sent current queue state to new client: " + currentQueueState);
@@ -108,26 +101,17 @@ public class TrafficLightServer extends WebSocketServer {
      */
     private void updateState(String message) {
         switch (message) {
-            // Красный индикатор (инциденты)
+            // Красный и желтый индикаторы (инциденты и алерты) НЕ сохраняем
+            // Они управляются таймерами на клиенте и являются временными
             case "RED_BLINK":
-                currentRedState = message;
-                break;
             case "GREEN_BLINK_INCIDENT":
-                currentRedState = message;
-                break;
-
-            // Желтый индикатор (алерты)
             case "YELLOW_BLINK":
-                currentYellowState = message;
-                break;
             case "GREEN_BLINK_ALERT":
-                currentYellowState = message;
+                // Ничего не делаем - не сохраняем состояние
                 break;
 
-            // Зеленый индикатор (очередь мониторинга)
+            // Зеленый индикатор (очередь мониторинга) - сохраняем
             case "QUEUE_RED":
-                currentQueueState = message;
-                break;
             case "QUEUE_GREEN":
                 currentQueueState = message;
                 break;
