@@ -19,8 +19,8 @@ public class ServerLauncher {
 
     static {
         try {
-            // Создаём лог в рабочей директории (WorkingDirectory из systemd service)
-            String logPath = "svetoofor-server.log";
+            // Явно указываем путь к логу
+            String logPath = "/home/fudo/onlyjirasvetofor/svetoofor-server.log";
             File logFile = new File(logPath);
             logWriter = new PrintWriter(new FileWriter(logFile, true), true);
         } catch (IOException e) {
