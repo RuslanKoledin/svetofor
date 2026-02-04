@@ -20,7 +20,7 @@ public class ServerLauncher {
     static {
         try {
             // Явно указываем путь к логу
-            String logPath = "/home/fudo/onlyjirasvetofor/svetoofor-server.log";
+            String logPath = "/home/fudo/jiranew/onlyjirasvetofor/svetoofor-server.log";
             File logFile = new File(logPath);
             logWriter = new PrintWriter(new FileWriter(logFile, true), true);
         } catch (IOException e) {
