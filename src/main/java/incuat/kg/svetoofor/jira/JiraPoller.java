@@ -37,7 +37,7 @@ public class JiraPoller {
     static {
         try {
             // Явно указываем путь к логу
-            String logPath = "/home/fudo/jiranew/onlyjirasvetofor/svetoofor-server.log";
+            String logPath = "/home/fudo/svetofor/svetofor/svetoofor-server.log";
             File logFile = new File(logPath);
             logWriter = new PrintWriter(new FileWriter(logFile, true), true);
         } catch (IOException e) {
@@ -48,7 +48,7 @@ public class JiraPoller {
     private static void log(String message) {
         String timestamp = LocalDateTime.now().format(LOG_FORMATTER);
         String logMessage = "[" + timestamp + "] " + message;
-        log(logMessage);
+        System.out.println(logMessage);
         if (logWriter != null) {
             logWriter.println(logMessage);
         }

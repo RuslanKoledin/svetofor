@@ -25,7 +25,7 @@ public class TrafficLightServer extends WebSocketServer {
     static {
         try {
             // Явно указываем путь к логу
-            String logPath = "/home/fudo/jiranew/onlyjirasvetofor/svetoofor-server.log";
+            String logPath = "/home/fudo/svetofor/svetofor/svetoofor-server.log";
             File logFile = new File(logPath);
             logWriter = new PrintWriter(new FileWriter(logFile, true), true);
         } catch (IOException e) {
