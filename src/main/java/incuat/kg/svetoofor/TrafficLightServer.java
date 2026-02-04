@@ -6,7 +6,10 @@ import org.java_websocket.server.WebSocketServer;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 
+import java.io.*;
 import java.net.InetSocketAddress;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,6 +18,30 @@ public class TrafficLightServer extends WebSocketServer {
 
     private final Set<WebSocket> clients = Collections.synchronizedSet(new HashSet<>());
     private TrafficLightApp app;
+
+    private static final DateTimeFormatter LOG_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static PrintWriter logWriter;
+
+    static {
+        try {
+            String logPath = System.getProperty("os.name").toLowerCase().contains("windows")
+                ? "svetoofor-server.log"
+                : System.getProperty("user.home") + "/svetoofor-server.log";
+            File logFile = new File(logPath);
+            logWriter = new PrintWriter(new FileWriter(logFile, true), true);
+        } catch (IOException e) {
+            System.err.println("Не удалось создать файл логов: " + e.getMessage());
+        }
+    }
+
+    private static void log(String message) {
+        String timestamp = LocalDateTime.now().format(LOG_FORMATTER);
+        String logMessage = "[" + timestamp + "] " + message;
+        log(logMessage);
+        if (logWriter != null) {
+            logWriter.println(logMessage);
+        }
+    }
 
     // Хранение текущего состояния светофора для синхронизации новых клиентов
     // Красный и желтый НЕ сохраняем - они временные (управляются таймерами на клиенте)
@@ -32,25 +59,25 @@ public class TrafficLightServer extends WebSocketServer {
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         clients.add(conn);
-        System.out.println("Client connected: " + conn.getRemoteSocketAddress());
+        log("Client connected: " + conn.getRemoteSocketAddress());
 
         // Отправляем новому клиенту только текущее состояние очереди
         // Красный и желтый индикаторы не синхронизируем - они временные
         if (currentQueueState != null) {
             conn.send(currentQueueState);
-            System.out.println("Sent current queue state to new client: " + currentQueueState);
+            log("Sent current queue state to new client: " + currentQueueState);
         }
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         clients.remove(conn);
-        System.out.println("Client disconnected: " + conn.getRemoteSocketAddress());
+        log("Client disconnected: " + conn.getRemoteSocketAddress());
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        System.out.println("Получено сообщение: " + message);
+        log("Получено сообщение: " + message);
 
         // Сохраняем текущее состояние для синхронизации
         updateState(message);
@@ -75,11 +102,11 @@ public class TrafficLightServer extends WebSocketServer {
 
     @Override
     public void onStart() {
-        System.out.println("Server started on port " + getPort());
+        log("Server started on port " + getPort());
     }
 
     public void broadcast(String message) {
-        System.out.println("Рассылка сообщения: " + message);
+        log("Рассылка сообщения: " + message);
 
         // Сохраняем текущее состояние для синхронизации
         updateState(message);

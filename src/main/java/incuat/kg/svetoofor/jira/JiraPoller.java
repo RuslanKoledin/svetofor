@@ -2,7 +2,9 @@ package incuat.kg.svetoofor.jira;
 
 import incuat.kg.svetoofor.TrafficLightServer;
 
-import java.io.IOException;
+import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,6 +31,30 @@ public class JiraPoller {
     // Флаг первого запуска - чтобы не отправлять сигналы на все существующие задачи
     private boolean isFirstRun = true;
 
+    private static final DateTimeFormatter LOG_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static PrintWriter logWriter;
+
+    static {
+        try {
+            String logPath = System.getProperty("os.name").toLowerCase().contains("windows")
+                ? "svetoofor-server.log"
+                : System.getProperty("user.home") + "/svetoofor-server.log";
+            File logFile = new File(logPath);
+            logWriter = new PrintWriter(new FileWriter(logFile, true), true);
+        } catch (IOException e) {
+            System.err.println("Не удалось создать файл логов: " + e.getMessage());
+        }
+    }
+
+    private static void log(String message) {
+        String timestamp = LocalDateTime.now().format(LOG_FORMATTER);
+        String logMessage = "[" + timestamp + "] " + message;
+        log(logMessage);
+        if (logWriter != null) {
+            logWriter.println(logMessage);
+        }
+    }
+
     public JiraPoller(JiraClient jiraClient,
                       TrafficLightServer trafficLightServer,
                       String customJql, int pollIntervalMinutes) {
@@ -43,9 +69,9 @@ public class JiraPoller {
      * Запуск периодического опроса
      */
     public void start() {
-        System.out.println("Запуск JIRA Poller...");
-        System.out.println("Интервал опроса: " + pollIntervalMinutes + " минут");
-        System.out.println("JQL запрос: " + customJql);
+        log("Запуск JIRA Poller...");
+        log("Интервал опроса: " + pollIntervalMinutes + " минут");
+        log("JQL запрос: " + customJql);
 
         // Проверка подключения
         if (!jiraClient.testConnection()) {
@@ -54,7 +80,7 @@ public class JiraPoller {
             return;
         }
 
-        System.out.println("✅ Подключение к JIRA успешно");
+        log("✅ Подключение к JIRA успешно");
 
         // Запускаем первый опрос сразу, затем по расписанию
         scheduler.schedule(this::poll, 10, TimeUnit.SECONDS);
@@ -67,23 +93,23 @@ public class JiraPoller {
     private void poll() {
         try {
             if (isFirstRun) {
-                System.out.println("\n🔍 Первый запуск - загрузка существующих задач (без отправки сигналов)...");
+                log("\n🔍 Первый запуск - загрузка существующих задач (без отправки сигналов)...");
             } else {
-                System.out.println("\n🔍 Опрос JIRA на наличие новых инцидентов/алертов...");
+                log("\n🔍 Опрос JIRA на наличие новых инцидентов/алертов...");
             }
 
             JiraSearchResult result = jiraClient.searchByCustomJql(customJql);
 
             if (result.getIssues() == null || result.getIssues().isEmpty()) {
-                System.out.println("   Новых инцидентов/алертов не найдено");
+                log("   Новых инцидентов/алертов не найдено");
                 if (isFirstRun) {
                     isFirstRun = false;
-                    System.out.println("✅ Инициализация завершена. Начинаем мониторинг новых задач...");
+                    log("✅ Инициализация завершена. Начинаем мониторинг новых задач...");
                 }
                 return;
             }
 
-            System.out.println("   Найдено записей: " + result.getIssues().size());
+            log("   Найдено записей: " + result.getIssues().size());
 
             int newCount = 0;
             for (JiraIssue issue : result.getIssues()) {
@@ -93,11 +119,11 @@ public class JiraPoller {
             }
 
             if (isFirstRun) {
-                System.out.println("✅ Инициализация завершена. Загружено существующих задач: " + result.getIssues().size());
-                System.out.println("   Начинаем мониторинг новых задач...");
+                log("✅ Инициализация завершена. Загружено существующих задач: " + result.getIssues().size());
+                log("   Начинаем мониторинг новых задач...");
                 isFirstRun = false;
             } else if (newCount > 0) {
-                System.out.println("✅ Обработано новых записей: " + newCount);
+                log("✅ Обработано новых записей: " + newCount);
             }
 
         } catch (IOException e) {
@@ -141,19 +167,19 @@ public class JiraPoller {
                 activeIncidents.remove(key);
                 processedIssues.add(key);
 
-                System.out.println("✅ Задача решена: " + key + " (тип: " + issueTypeName + ")");
-                System.out.println("   Статус: " + previousStatus + " → " + currentStatus);
+                log("✅ Задача решена: " + key + " (тип: " + issueTypeName + ")");
+                log("   Статус: " + previousStatus + " → " + currentStatus);
 
                 // Отправляем зеленый сигнал ОДИН РАЗ (30 секунд) в соответствующий кружок
                 if (trafficLightServer != null) {
                     if (isIncident) {
-                        System.out.println("   🟢 Отправка сигнала: GREEN_BLINK_INCIDENT (решение инцидента)");
+                        log("   🟢 Отправка сигнала: GREEN_BLINK_INCIDENT (решение инцидента)");
                         trafficLightServer.broadcast("GREEN_BLINK_INCIDENT");
                     } else if (isAlert) {
-                        System.out.println("   🟢 Отправка сигнала: GREEN_BLINK_ALERT (решение алерта)");
+                        log("   🟢 Отправка сигнала: GREEN_BLINK_ALERT (решение алерта)");
                         trafficLightServer.broadcast("GREEN_BLINK_ALERT");
                     } else {
-                        System.out.println("   🟢 Отправка сигнала: GREEN_BLINK (решение)");
+                        log("   🟢 Отправка сигнала: GREEN_BLINK (решение)");
                         trafficLightServer.broadcast("GREEN_BLINK");
                     }
                 }
@@ -165,8 +191,8 @@ public class JiraPoller {
             if (isActive) {
                 if (!previousStatus.equals(currentStatus)) {
                     activeIncidents.put(key, currentStatus);
-                    System.out.println("🔄 Обновление статуса: " + key);
-                    System.out.println("   Статус: " + previousStatus + " → " + currentStatus + " (без повторного сигнала)");
+                    log("🔄 Обновление статуса: " + key);
+                    log("   Статус: " + previousStatus + " → " + currentStatus + " (без повторного сигнала)");
                 }
                 return false; // НЕ отправляем повторный сигнал
             }
@@ -193,27 +219,27 @@ public class JiraPoller {
             // При первом запуске НЕ отправляем сигналы - только запоминаем задачи
             if (isFirstRun) {
                 // Только логируем без отправки сигнала
-                System.out.println("   📋 Существующая задача: " + key + " (тип: " + issueTypeName + ", ID: " + issueTypeId + ", статус: " + currentStatus + ")");
+                log("   📋 Существующая задача: " + key + " (тип: " + issueTypeName + ", ID: " + issueTypeId + ", статус: " + currentStatus + ")");
                 return false;
             }
 
             // После первого запуска - отправляем сигнал на НОВЫЕ задачи
-            System.out.println("📋 Новая активная задача: " + key + " (тип: " + issueTypeName + ", ID: " + issueTypeId + ")");
+            log("📋 Новая активная задача: " + key + " (тип: " + issueTypeName + ", ID: " + issueTypeId + ")");
 
             // Формируем сообщение для консоли
             String message = formatIncidentMessage(issue);
-            System.out.println("   " + message);
+            log("   " + message);
 
             // Сигнал светофора в зависимости от типа - ОДИН РАЗ
             if (trafficLightServer != null) {
                 if (isIncident) {
-                    System.out.println("   🔴 Отправка сигнала: RED_BLINK (инцидент) - ОДИН РАЗ");
+                    log("   🔴 Отправка сигнала: RED_BLINK (инцидент) - ОДИН РАЗ");
                     trafficLightServer.broadcast("RED_BLINK");
                 } else if (isAlert) {
-                    System.out.println("   🟡 Отправка сигнала: YELLOW_BLINK (алерт) - ОДИН РАЗ");
+                    log("   🟡 Отправка сигнала: YELLOW_BLINK (алерт) - ОДИН РАЗ");
                     trafficLightServer.broadcast("YELLOW_BLINK");
                 } else {
-                    System.out.println("   ⚪ Неизвестный тип, отправка RED_BLINK");
+                    log("   ⚪ Неизвестный тип, отправка RED_BLINK");
                     trafficLightServer.broadcast("RED_BLINK");
                 }
             }
@@ -346,7 +372,7 @@ public class JiraPoller {
      * Остановка опроса
      */
     public void stop() {
-        System.out.println("Остановка JIRA Poller...");
+        log("Остановка JIRA Poller...");
         scheduler.shutdown();
         try {
             if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -364,6 +390,6 @@ public class JiraPoller {
     public void clearProcessedIssues() {
         processedIssues.clear();
         activeIncidents.clear();
-        System.out.println("История обработанных инцидентов очищена");
+        log("История обработанных инцидентов очищена");
     }
 }
