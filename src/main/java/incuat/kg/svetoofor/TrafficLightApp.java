@@ -306,15 +306,7 @@ public class TrafficLightApp extends Application {
         yellowLabel.setTextFill(Color.WHITE);
         greenLabel.setTextFill(Color.WHITE);
 
-        // --- Простые круги без эффектов ---
-        redCircle.setStroke(Color.BLACK);
-        redCircle.setStrokeWidth(2);
-
-        yellowCircle.setStroke(Color.BLACK);
-        yellowCircle.setStrokeWidth(2);
-
-        greenCircle.setStroke(Color.BLACK);
-        greenCircle.setStrokeWidth(2);
+        // --- Простые круги без эффектов и обводки ---
 
 
         VBox redBox = new VBox(3, redLabel, redCircle);
