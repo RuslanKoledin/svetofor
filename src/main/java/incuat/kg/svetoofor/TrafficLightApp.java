@@ -81,22 +81,37 @@ public class TrafficLightApp extends Application {
 
     private void loadConfiguration() {
         Properties props = new Properties();
+        boolean loaded = false;
 
-        // Пробуем загрузить client.properties из разных мест
-        String[] configPaths = {
-            "client.properties",
-            System.getProperty("user.home") + "/AppData/Local/TrafficLightClient/client.properties",
-            System.getProperty("user.dir") + "/client.properties"
-        };
+        // Сначала пробуем загрузить из JAR (для jpackage установщика)
+        try (var is = getClass().getClassLoader().getResourceAsStream("client.properties")) {
+            if (is != null) {
+                props.load(is);
+                log("Loaded configuration from JAR resource: client.properties");
+                loaded = true;
+            }
+        } catch (IOException e) {
+            // Не удалось загрузить из JAR, продолжаем
+        }
 
-        for (String path : configPaths) {
-            try (FileInputStream fis = new FileInputStream(path)) {
-                props.load(fis);
-                log("Loaded configuration from: " + path);
-                configPath = path;  // Сохраняем путь для записи
-                break;
-            } catch (IOException e) {
-                // Пробуем следующий путь
+        // Если не загрузили из JAR, пробуем внешние файлы
+        if (!loaded) {
+            String[] configPaths = {
+                "client.properties",
+                System.getProperty("user.home") + "/AppData/Local/TrafficLightClient/client.properties",
+                System.getProperty("user.dir") + "/client.properties"
+            };
+
+            for (String path : configPaths) {
+                try (FileInputStream fis = new FileInputStream(path)) {
+                    props.load(fis);
+                    log("Loaded configuration from: " + path);
+                    configPath = path;  // Сохраняем путь для записи
+                    loaded = true;
+                    break;
+                } catch (IOException e) {
+                    // Пробуем следующий путь
+                }
             }
         }
 
