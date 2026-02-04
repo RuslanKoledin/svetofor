@@ -115,12 +115,12 @@ public class TrafficLightApp extends Application {
             }
         }
 
-        // Загружаем параметры из конфигурации (приоритет: переменные окружения > properties файл)
+        // Загружаем параметры из конфигурации (приоритет: переменные окружения > properties файл > значения по умолчанию)
         serverAddress = getConfigValue(props, "server.address", "SERVER_ADDRESS", serverAddress);
         serverPort = Integer.parseInt(getConfigValue(props, "server.port", "SERVER_PORT", String.valueOf(serverPort)));
 
-        adminLogin = getConfigValue(props, "admin.login", "ADMIN_LOGIN", "");
-        adminPassword = getConfigValue(props, "admin.password", "ADMIN_PASSWORD", "");
+        adminLogin = getConfigValue(props, "admin.login", "ADMIN_LOGIN", adminLogin);
+        adminPassword = getConfigValue(props, "admin.password", "ADMIN_PASSWORD", adminPassword);
 
         windowWidth = Integer.parseInt(getConfigValue(props, "window.width", "WINDOW_WIDTH", String.valueOf(windowWidth)));
         windowHeight = Integer.parseInt(getConfigValue(props, "window.height", "WINDOW_HEIGHT", String.valueOf(windowHeight)));
