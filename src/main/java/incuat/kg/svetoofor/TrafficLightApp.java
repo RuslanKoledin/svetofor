@@ -60,7 +60,7 @@ public class TrafficLightApp extends Application {
     private static void log(String message) {
         String timestamp = LocalDateTime.now().format(LOG_FORMATTER);
         String logMessage = "[" + timestamp + "] " + message;
-        log(logMessage);
+        System.out.println(logMessage);
         if (logWriter != null) {
             logWriter.println(logMessage);
         }
