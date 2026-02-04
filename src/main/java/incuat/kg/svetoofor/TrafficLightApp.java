@@ -14,9 +14,9 @@ import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import javafx.util.Pair;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 public class TrafficLightApp extends Application {
@@ -42,6 +42,29 @@ public class TrafficLightApp extends Application {
     private int windowHeight = 250;
     private String configPath = "client.properties";  // Путь к конфигу для сохранения
 
+    // Логирование
+    private static final DateTimeFormatter LOG_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static PrintWriter logWriter;
+
+    static {
+        try {
+            String logPath = System.getProperty("user.home") + "/AppData/Local/TrafficLightClient/svetoofor.log";
+            File logFile = new File(logPath);
+            logFile.getParentFile().mkdirs();
+            logWriter = new PrintWriter(new FileWriter(logFile, true), true);
+        } catch (IOException e) {
+            System.err.println("Не удалось создать файл логов: " + e.getMessage());
+        }
+    }
+
+    private static void log(String message) {
+        String timestamp = LocalDateTime.now().format(LOG_FORMATTER);
+        String logMessage = "[" + timestamp + "] " + message;
+        log(logMessage);
+        if (logWriter != null) {
+            logWriter.println(logMessage);
+        }
+    }
 
     public static void main(String[] args) {
         launch(args);
@@ -69,7 +92,7 @@ public class TrafficLightApp extends Application {
         for (String path : configPaths) {
             try (FileInputStream fis = new FileInputStream(path)) {
                 props.load(fis);
-                System.out.println("Loaded configuration from: " + path);
+                log("Loaded configuration from: " + path);
                 configPath = path;  // Сохраняем путь для записи
                 break;
             } catch (IOException e) {
@@ -89,11 +112,11 @@ public class TrafficLightApp extends Application {
 
         // Выводим адрес сервера (может уже содержать ws://)
         if (serverAddress.startsWith("ws://") || serverAddress.startsWith("wss://")) {
-            System.out.println("Server: " + serverAddress);
+            log("Server: " + serverAddress);
         } else {
-            System.out.println("Server: ws://" + serverAddress + ":" + serverPort);
+            log("Server: ws://" + serverAddress + ":" + serverPort);
         }
-        System.out.println("Window size: " + windowWidth + "x" + windowHeight);
+        log("Window size: " + windowWidth + "x" + windowHeight);
     }
 
     private String getConfigValue(Properties props, String propKey, String envKey, String defaultValue) {
@@ -130,7 +153,7 @@ public class TrafficLightApp extends Application {
                 props.store(fos, "Traffic Light Client Configuration");
             }
 
-            System.out.println("Размер окна сохранен: " + windowWidth + "x" + windowHeight);
+            log("Размер окна сохранен: " + windowWidth + "x" + windowHeight);
         } catch (IOException e) {
             System.err.println("Не удалось сохранить размер окна: " + e.getMessage());
         }
@@ -162,17 +185,21 @@ public class TrafficLightApp extends Application {
         stage.show();
 
         adminButton.setOnAction(e -> {
+            log("Пользователь выбрал режим: Админ");
             if (showLoginDialog()) {
                 isAdmin = true;
+                log("Авторизация админа успешна");
                 showTrafficLightStage();
                 stage.close();
             } else {
+                log("Авторизация админа не удалась - неверные данные");
                 Alert alert = new Alert(Alert.AlertType.ERROR, "Неверный логин или пароль", ButtonType.OK);
                 alert.showAndWait();
             }
         });
 
         specialistButton.setOnAction(e -> {
+            log("Пользователь выбрал режим: Специалист");
             isAdmin = false;
             showTrafficLightStage();
             stage.close();
@@ -182,8 +209,8 @@ public class TrafficLightApp extends Application {
     private boolean showLoginDialog() {
         // Если логин/пароль не заданы - пропускаем авторизацию
         if (adminLogin == null || adminLogin.isEmpty() || adminPassword == null || adminPassword.isEmpty()) {
-            System.out.println("Предупреждение: учетные данные администратора не настроены!");
-            System.out.println("Установите admin.login и admin.password в client.properties");
+            log("Предупреждение: учетные данные администратора не настроены!");
+            log("Установите admin.login и admin.password в client.properties");
             Alert alert = new Alert(Alert.AlertType.WARNING,
                 "Учетные данные администратора не настроены в client.properties\nПроверьте настройки admin.login и admin.password",
                 ButtonType.OK);
@@ -223,10 +250,10 @@ public class TrafficLightApp extends Application {
             String enteredLogin = result.get().getKey();
             String enteredPassword = result.get().getValue();
 
-            System.out.println("Попытка входа - Логин: " + enteredLogin);
-            System.out.println("Ожидаемый логин: '" + adminLogin + "'");
-            System.out.println("Логин совпадает: " + adminLogin.equals(enteredLogin));
-            System.out.println("Пароль совпадает: " + adminPassword.equals(enteredPassword));
+            log("Попытка входа - Логин: " + enteredLogin);
+            log("Ожидаемый логин: '" + adminLogin + "'");
+            log("Логин совпадает: " + adminLogin.equals(enteredLogin));
+            log("Пароль совпадает: " + adminPassword.equals(enteredPassword));
 
             return adminLogin.equals(enteredLogin) && adminPassword.equals(enteredPassword);
         }
@@ -337,10 +364,12 @@ public class TrafficLightApp extends Application {
                 Color currentColor = (Color) greenCircle.getFill();
                 if (currentColor.equals(Color.rgb(40, 40, 40)) || currentColor.equals(Color.LIMEGREEN)) {
                     // Если выключен или зеленый - включаем красный (очередь большая)
+                    log("Админ переключил очередь: КРАСНЫЙ (большая очередь)");
                     setQueueColor(greenCircle, Color.RED, "queue_red");
                     wsClient.sendMessage("QUEUE_RED");
                 } else {
                     // Если красный - включаем зеленый (очередь не нагружена)
+                    log("Админ переключил очередь: ЗЕЛЁНЫЙ (очередь не нагружена)");
                     setQueueColor(greenCircle, Color.LIMEGREEN, "queue_green");
                     wsClient.sendMessage("QUEUE_GREEN");
                 }
