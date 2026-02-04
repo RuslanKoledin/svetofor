@@ -26,7 +26,7 @@ public class TrafficLightServer extends WebSocketServer {
         try {
             String logPath = System.getProperty("os.name").toLowerCase().contains("windows")
                 ? "svetoofor-server.log"
-                : System.getProperty("user.home") + "/svetoofor-server.log";
+                : System.getProperty("user.home") + "/onlyjirasvetofor/svetoofor-server.log";
             File logFile = new File(logPath);
             logWriter = new PrintWriter(new FileWriter(logFile, true), true);
         } catch (IOException e) {
@@ -37,7 +37,7 @@ public class TrafficLightServer extends WebSocketServer {
     private static void log(String message) {
         String timestamp = LocalDateTime.now().format(LOG_FORMATTER);
         String logMessage = "[" + timestamp + "] " + message;
-        log(logMessage);
+        System.out.println(logMessage);
         if (logWriter != null) {
             logWriter.println(logMessage);
         }

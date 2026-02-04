@@ -38,7 +38,7 @@ public class JiraPoller {
         try {
             String logPath = System.getProperty("os.name").toLowerCase().contains("windows")
                 ? "svetoofor-server.log"
-                : System.getProperty("user.home") + "/svetoofor-server.log";
+                : System.getProperty("user.home") + "/onlyjirasvetofor/svetoofor-server.log";
             File logFile = new File(logPath);
             logWriter = new PrintWriter(new FileWriter(logFile, true), true);
         } catch (IOException e) {
