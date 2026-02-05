@@ -317,14 +317,12 @@ public class TrafficLightApp extends Application {
         int circleRadius = (int)(20 * scale);
         int fontSize = Math.max(10, (int)(14 * scale));
 
-        // Инициализируем овалы с адаптивным размером (вытянутые по горизонтали)
-        int radiusX = (int)(circleRadius * 1.3); // Ширина овала больше
-        int radiusY = circleRadius; // Высота овала = обычный радиус
-        redCircle = new Ellipse(radiusX, radiusY);
+        // Инициализируем круглые сигналы с адаптивным размером
+        redCircle = new Ellipse(circleRadius, circleRadius);
         redCircle.setFill(Color.rgb(40, 40, 40));
-        yellowCircle = new Ellipse(radiusX, radiusY);
+        yellowCircle = new Ellipse(circleRadius, circleRadius);
         yellowCircle.setFill(Color.rgb(40, 40, 40));
-        greenCircle = new Ellipse(radiusX, radiusY);
+        greenCircle = new Ellipse(circleRadius, circleRadius);
         greenCircle.setFill(Color.rgb(40, 40, 40));
 
         VBox trafficLight = new VBox(10 * scale);
