@@ -289,7 +289,7 @@ public class TrafficLightApp extends Application {
         }
         wsClient.connect(wsUrl, this);
         Stage stage = new Stage();
-        stage.initStyle(StageStyle.UNDECORATED);
+        stage.initStyle(StageStyle.TRANSPARENT); // Прозрачное окно без рамки
         stage.setResizable(false); // Запрещаем изменение размера
         stage.setAlwaysOnTop(true); // Окно всегда поверх всех других окон
 
@@ -327,15 +327,17 @@ public class TrafficLightApp extends Application {
         greenCircle = new Ellipse(radiusX, radiusY);
         greenCircle.setFill(Color.rgb(40, 40, 40));
 
-        VBox trafficLight = new VBox(5 * scale);
+        VBox trafficLight = new VBox(10 * scale);
         trafficLight.setAlignment(Pos.CENTER);
+        // Металлический серый корпус с градиентом и эффектом объёма
         trafficLight.setStyle(
-                "-fx-padding: " + (8 * scale) + ";" +
-                        "-fx-background-color: #5a5a5a;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-border-color: #777777;" +
-                        "-fx-border-width: 2;" +
-                        "-fx-border-radius: 12;"
+                "-fx-padding: " + (15 * scale) + ";" +
+                        "-fx-background-color: linear-gradient(to bottom, #c0c0c0 0%, #8a8a8a 50%, #666666 100%);" +
+                        "-fx-background-radius: " + (50 * scale) + ";" +
+                        "-fx-border-color: linear-gradient(to bottom, #e0e0e0, #555555);" +
+                        "-fx-border-width: " + (2 * scale) + ";" +
+                        "-fx-border-radius: " + (50 * scale) + ";" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 2, 2);"
         );
 
 
@@ -398,7 +400,8 @@ public class TrafficLightApp extends Application {
         }
 
         Scene scene = new Scene(root, windowWidth, windowHeight);
-        root.setStyle("-fx-background-color: #000000;");
+        scene.setFill(null); // Прозрачный фон сцены
+        root.setStyle("-fx-background-color: transparent;"); // Прозрачный фон root
         stage.setScene(scene);
 
         // Добавляем возможность перемещения окна мышью
