@@ -314,7 +314,7 @@ public class TrafficLightApp extends Application {
         // Вычисляем масштаб на основе размера окна
         double scale = Math.min(windowWidth / 130.0, windowHeight / 250.0);
         int circleRadius = (int)(27 * scale);
-        int fontSize = Math.max(8, (int)(11 * scale));
+        int fontSize = Math.max(10, (int)(14 * scale));
 
         // Инициализируем круги с адаптивным размером
         redCircle = new Circle(circleRadius, Color.rgb(40, 40, 40));
