@@ -39,7 +39,7 @@ public class TrafficLightApp extends Application {
     private int serverPort = 52521;
     private String adminLogin = "admin";
     private String adminPassword = "qweasd123#$";
-    private int windowWidth = 116;
+    private int windowWidth = 92;
     private int windowHeight = 212;
     private String configPath = "client.properties";  // Путь к конфигу для сохранения
 
@@ -313,8 +313,8 @@ public class TrafficLightApp extends Application {
         }
 
         // Вычисляем масштаб на основе размера окна
-        double scale = Math.min(windowWidth / 130.0, windowHeight / 250.0);
-        int circleRadius = (int)(27 * scale);
+        double scale = Math.min(windowWidth / 92.0, windowHeight / 250.0);
+        int circleRadius = (int)(20 * scale);
         int fontSize = Math.max(10, (int)(14 * scale));
 
         // Инициализируем овалы с адаптивным размером (вытянутые по горизонтали)
