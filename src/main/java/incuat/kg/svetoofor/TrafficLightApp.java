@@ -329,12 +329,12 @@ public class TrafficLightApp extends Application {
 
         VBox trafficLight = new VBox(10 * scale);
         trafficLight.setAlignment(Pos.CENTER);
-        // Металлический серый корпус с градиентом и эффектом объёма
+        // Зелёный корпус с градиентом (светлый → тёмный бирюзовый)
         trafficLight.setStyle(
                 "-fx-padding: " + (15 * scale) + ";" +
-                        "-fx-background-color: linear-gradient(to bottom, #c0c0c0 0%, #8a8a8a 50%, #666666 100%);" +
+                        "-fx-background-color: linear-gradient(to bottom, #0bb17c 0%, #007b7e 50%, #006064 100%);" +
                         "-fx-background-radius: " + (50 * scale) + ";" +
-                        "-fx-border-color: linear-gradient(to bottom, #e0e0e0, #555555);" +
+                        "-fx-border-color: linear-gradient(to bottom, #1dd9a0, #004d50);" +
                         "-fx-border-width: " + (2 * scale) + ";" +
                         "-fx-border-radius: " + (50 * scale) + ";" +
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 2, 2);"
