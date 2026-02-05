@@ -8,6 +8,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Ellipse;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -22,9 +23,9 @@ import java.util.Properties;
 public class TrafficLightApp extends Application {
     private TrafficLightSpec wsClient = new TrafficLightSpec();
 
-    private Circle redCircle;
-    private Circle yellowCircle;
-    private Circle greenCircle;
+    private Ellipse redCircle;
+    private Ellipse yellowCircle;
+    private Ellipse greenCircle;
 
     private Timeline redBlinkTimeline;
     private Timeline yellowBlinkTimeline;
@@ -316,10 +317,15 @@ public class TrafficLightApp extends Application {
         int circleRadius = (int)(27 * scale);
         int fontSize = Math.max(10, (int)(14 * scale));
 
-        // Инициализируем круги с адаптивным размером
-        redCircle = new Circle(circleRadius, Color.rgb(40, 40, 40));
-        yellowCircle = new Circle(circleRadius, Color.rgb(40, 40, 40));
-        greenCircle = new Circle(circleRadius, Color.rgb(40, 40, 40));
+        // Инициализируем овалы с адаптивным размером (вытянутые по горизонтали)
+        int radiusX = (int)(circleRadius * 1.3); // Ширина овала больше
+        int radiusY = circleRadius; // Высота овала = обычный радиус
+        redCircle = new Ellipse(radiusX, radiusY);
+        redCircle.setFill(Color.rgb(40, 40, 40));
+        yellowCircle = new Ellipse(radiusX, radiusY);
+        yellowCircle.setFill(Color.rgb(40, 40, 40));
+        greenCircle = new Ellipse(radiusX, radiusY);
+        greenCircle.setFill(Color.rgb(40, 40, 40));
 
         VBox trafficLight = new VBox(5 * scale);
         trafficLight.setAlignment(Pos.CENTER);
