@@ -38,8 +38,8 @@ public class TrafficLightApp extends Application {
     private int serverPort = 52521;
     private String adminLogin = "admin";
     private String adminPassword = "qweasd123#$";
-    private int windowWidth = 130;
-    private int windowHeight = 250;
+    private int windowWidth = 116;
+    private int windowHeight = 212;
     private String configPath = "client.properties";  // Путь к конфигу для сохранения
 
     // Логирование
