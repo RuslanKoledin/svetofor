@@ -421,7 +421,7 @@ public class TrafficLightApp extends Application {
         stage.show();
     }
 
-    private void blinkColor(Circle circle, Color color, int seconds, String colorName) {
+    private void blinkColor(Ellipse circle, Color color, int seconds, String colorName) {
         // Если зажигается зеленый в кружке инцидента (решение инцидента)
         if (colorName.equals("green_incident")) {
             // Останавливаем красный таймер если он есть
@@ -491,7 +491,7 @@ public class TrafficLightApp extends Application {
     }
 
     // Метод для управления очередью мониторинга (без автоотключения)
-    private void setQueueColor(Circle circle, Color color, String colorName) {
+    private void setQueueColor(Ellipse circle, Color color, String colorName) {
         // Просто устанавливаем цвет без таймера
         circle.setFill(color);
     }
