@@ -332,13 +332,14 @@ public class TrafficLightApp extends Application {
         // Зелёный корпус с градиентом (светлый → тёмный бирюзовый)
         trafficLight.setStyle(
                 "-fx-padding: " + (15 * scale) + ";" +
-                        "-fx-background-color: linear-gradient(to bottom, #0bb17c 0%, #007b7e 50%, #006064 100%);" +
+                        "-fx-background-color: #173f36;" +
                         "-fx-background-radius: " + (50 * scale) + ";" +
-                        "-fx-border-color: linear-gradient(to bottom, #1dd9a0, #004d50);" +
+                        "-fx-border-color: #0e2a24;" +
                         "-fx-border-width: " + (2 * scale) + ";" +
                         "-fx-border-radius: " + (50 * scale) + ";" +
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 2, 2);"
         );
+
 
 
 
