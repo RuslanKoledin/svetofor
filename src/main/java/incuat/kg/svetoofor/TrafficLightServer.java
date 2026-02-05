@@ -43,8 +43,9 @@ public class TrafficLightServer extends WebSocketServer {
     }
 
     // Хранение текущего состояния светофора для синхронизации новых клиентов
-    // Красный и желтый НЕ сохраняем - они временные (управляются таймерами на клиенте)
-    // Сохраняем только состояние очереди мониторинга
+    // Просто сохраняем последний сигнал для каждого индикатора
+    private String currentRedState = null;      // RED_BLINK или GREEN_BLINK_INCIDENT или null
+    private String currentYellowState = null;   // YELLOW_BLINK или GREEN_BLINK_ALERT или null
     private String currentQueueState = null;    // QUEUE_RED или QUEUE_GREEN или null
 
     public TrafficLightServer(int port) {
@@ -60,8 +61,20 @@ public class TrafficLightServer extends WebSocketServer {
         clients.add(conn);
         log("Client connected: " + conn.getRemoteSocketAddress());
 
-        // Отправляем новому клиенту только текущее состояние очереди
-        // Красный и желтый индикаторы не синхронизируем - они временные
+        // Отправляем новому клиенту все сохраненные состояния
+        // Красный индикатор (инциденты)
+        if (currentRedState != null) {
+            conn.send(currentRedState);
+            log("Sent current red state to new client: " + currentRedState);
+        }
+
+        // Желтый индикатор (алерты)
+        if (currentYellowState != null) {
+            conn.send(currentYellowState);
+            log("Sent current yellow state to new client: " + currentYellowState);
+        }
+
+        // Зеленый индикатор (очередь мониторинга)
         if (currentQueueState != null) {
             conn.send(currentQueueState);
             log("Sent current queue state to new client: " + currentQueueState);
@@ -124,19 +137,23 @@ public class TrafficLightServer extends WebSocketServer {
 
     /**
      * Обновляет сохраненное состояние светофора на основе полученного сообщения
+     * Просто сохраняем последний сигнал без проверок времени
      */
     private void updateState(String message) {
         switch (message) {
-            // Красный и желтый индикаторы (инциденты и алерты) НЕ сохраняем
-            // Они управляются таймерами на клиенте и являются временными
+            // Красный индикатор (инциденты)
             case "RED_BLINK":
             case "GREEN_BLINK_INCIDENT":
-            case "YELLOW_BLINK":
-            case "GREEN_BLINK_ALERT":
-                // Ничего не делаем - не сохраняем состояние
+                currentRedState = message;
                 break;
 
-            // Зеленый индикатор (очередь мониторинга) - сохраняем
+            // Желтый индикатор (алерты)
+            case "YELLOW_BLINK":
+            case "GREEN_BLINK_ALERT":
+                currentYellowState = message;
+                break;
+
+            // Зеленый индикатор (очередь мониторинга)
             case "QUEUE_RED":
             case "QUEUE_GREEN":
                 currentQueueState = message;
