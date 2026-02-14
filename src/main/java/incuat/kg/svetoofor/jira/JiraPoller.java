@@ -231,15 +231,17 @@ public class JiraPoller {
 
             // Сигнал светофора в зависимости от типа - ОДИН РАЗ
             if (trafficLightServer != null) {
+                String summary = sanitizeSummary(issue);
+                String payload = (summary != null && !summary.isEmpty()) ? ("|" + summary) : "";
                 if (isIncident) {
                     log("   🔴 Отправка сигнала: RED_BLINK (инцидент) - ОДИН РАЗ");
-                    trafficLightServer.broadcast("RED_BLINK");
+                    trafficLightServer.broadcast("RED_BLINK" + payload);
                 } else if (isAlert) {
                     log("   🟡 Отправка сигнала: YELLOW_BLINK (алерт) - ОДИН РАЗ");
-                    trafficLightServer.broadcast("YELLOW_BLINK");
+                    trafficLightServer.broadcast("YELLOW_BLINK" + payload);
                 } else {
                     log("   ⚪ Неизвестный тип, отправка RED_BLINK");
-                    trafficLightServer.broadcast("RED_BLINK");
+                    trafficLightServer.broadcast("RED_BLINK" + payload);
                 }
             }
 
@@ -327,6 +329,18 @@ public class JiraPoller {
         }
 
         return sb.toString();
+    }
+
+    private String sanitizeSummary(JiraIssue issue) {
+        if (issue == null || issue.getFields() == null) {
+            return null;
+        }
+        String summary = issue.getFields().getSummary();
+        if (summary == null) {
+            return null;
+        }
+        String cleaned = summary.replace("\r", " ").replace("\n", " ").trim();
+        return cleaned.isEmpty() ? null : cleaned;
     }
 
     /**

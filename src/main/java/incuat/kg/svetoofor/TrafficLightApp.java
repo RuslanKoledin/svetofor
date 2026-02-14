@@ -33,6 +33,10 @@ public class TrafficLightApp extends Application {
 
     private boolean isIncidentActive = false;
     private boolean isAdmin = false;
+    private Tooltip incidentTooltip;
+    private Tooltip alertTooltip;
+    private String currentIncidentName;
+    private String currentAlertName;
 
     // Configuration loaded from client.properties
     private String serverAddress = "10.10.90.170";
@@ -77,7 +81,10 @@ public class TrafficLightApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         loadConfiguration();
-        showRoleSelection(primaryStage);
+        // По умолчанию сразу запускаем интерфейс специалиста
+        isAdmin = false;
+        showTrafficLightStage();
+        primaryStage.close();
     }
 
     private void loadConfiguration() {
@@ -325,6 +332,10 @@ public class TrafficLightApp extends Application {
         greenCircle = new Ellipse(circleRadius, circleRadius);
         greenCircle.setFill(Color.rgb(40, 40, 40));
 
+        // Всплывающие подсказки для инцидента и алерта
+        incidentTooltip = new Tooltip();
+        alertTooltip = new Tooltip();
+
         VBox trafficLight = new VBox(10 * scale);
         trafficLight.setAlignment(Pos.CENTER);
         // Зелёный корпус с градиентом (светлый → тёмный бирюзовый)
@@ -377,12 +388,12 @@ public class TrafficLightApp extends Application {
         VBox root = new VBox(10, trafficLight);
         root.setAlignment(Pos.CENTER);
 
-        // Только админ может управлять очередью мониторинга (третий круг)
-        // Красный и желтый управляются только из JIRA
-        if (isAdmin) {
-            // Клик по третьему кругу (очередь мониторинг) - переключение между красным и зеленым
-            greenCircle.setOnMouseClicked(e -> {
-                // Проверяем текущее состояние и переключаем
+        // Управление очередью мониторинга (третий круг)
+        // По умолчанию клики используются как "секретный" вход в админ-режим (5 кликов)
+        final int[] adminClickCount = {0};
+        greenCircle.setOnMouseClicked(e -> {
+            if (isAdmin) {
+                // Клик по третьему кругу (очередь мониторинг) - переключение между красным и зеленым
                 Color currentColor = (Color) greenCircle.getFill();
                 if (currentColor.equals(Color.rgb(40, 40, 40)) || currentColor.equals(Color.LIMEGREEN)) {
                     // Если выключен или зеленый - включаем красный (очередь большая)
@@ -395,8 +406,25 @@ public class TrafficLightApp extends Application {
                     setQueueColor(greenCircle, Color.LIMEGREEN, "queue_green");
                     wsClient.sendMessage("QUEUE_GREEN");
                 }
-            });
-        }
+                return;
+            }
+
+            adminClickCount[0]++;
+            if (adminClickCount[0] >= 5) {
+                adminClickCount[0] = 0;
+                log("Секретный вход: попытка авторизации админа");
+                if (showLoginDialog()) {
+                    isAdmin = true;
+                    log("Авторизация админа успешна (секретный вход)");
+                } else {
+                    log("Авторизация админа не удалась - неверные данные");
+                    if (adminLogin != null && !adminLogin.isEmpty() && adminPassword != null && !adminPassword.isEmpty()) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR, "Неверный логин или пароль", ButtonType.OK);
+                        alert.showAndWait();
+                    }
+                }
+            }
+        });
 
         Scene scene = new Scene(root, windowWidth, windowHeight);
         scene.setFill(null); // Прозрачный фон сцены
@@ -500,13 +528,61 @@ public class TrafficLightApp extends Application {
 
 
     public void handleServerMessage(String message) {
-        switch (message) {
-            case "RED_BLINK" -> blinkColor(redCircle, Color.RED, 120, "red");
-            case "YELLOW_BLINK" -> blinkColor(yellowCircle, Color.YELLOW, 120, "yellow");
-            case "GREEN_BLINK_INCIDENT" -> blinkColor(redCircle, Color.LIMEGREEN, 100, "green_incident");  // Зеленый в кружке инцидента
-            case "GREEN_BLINK_ALERT" -> blinkColor(yellowCircle, Color.LIMEGREEN, 60, "green_alert");  // Зеленый в кружке алерта
+        String command = message;
+        String payload = null;
+        int sep = message.indexOf('|');
+        if (sep != -1) {
+            command = message.substring(0, sep);
+            payload = message.substring(sep + 1);
+        }
+
+        switch (command) {
+            case "RED_BLINK" -> {
+                currentIncidentName = sanitizeTitle(payload);
+                updateTooltip(redCircle, incidentTooltip, buildTooltipText("Инцидент", currentIncidentName));
+                blinkColor(redCircle, Color.RED, 120, "red");
+            }
+            case "YELLOW_BLINK" -> {
+                currentAlertName = sanitizeTitle(payload);
+                updateTooltip(yellowCircle, alertTooltip, buildTooltipText("Алерт", currentAlertName));
+                blinkColor(yellowCircle, Color.YELLOW, 120, "yellow");
+            }
+            case "GREEN_BLINK_INCIDENT" -> {
+                currentIncidentName = null;
+                updateTooltip(redCircle, incidentTooltip, null);
+                blinkColor(redCircle, Color.LIMEGREEN, 100, "green_incident");  // Зеленый в кружке инцидента
+            }
+            case "GREEN_BLINK_ALERT" -> {
+                currentAlertName = null;
+                updateTooltip(yellowCircle, alertTooltip, null);
+                blinkColor(yellowCircle, Color.LIMEGREEN, 60, "green_alert");  // Зеленый в кружке алерта
+            }
             case "QUEUE_RED" -> setQueueColor(greenCircle, Color.RED, "queue_red");
             case "QUEUE_GREEN" -> setQueueColor(greenCircle, Color.LIMEGREEN, "queue_green");
         }
+    }
+
+    private void updateTooltip(Ellipse circle, Tooltip tooltip, String text) {
+        if (text == null || text.isEmpty()) {
+            Tooltip.uninstall(circle, tooltip);
+            return;
+        }
+        tooltip.setText(text);
+        Tooltip.install(circle, tooltip);
+    }
+
+    private String buildTooltipText(String label, String title) {
+        if (title == null || title.isEmpty()) {
+            return null;
+        }
+        return label + ": " + title;
+    }
+
+    private String sanitizeTitle(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String cleaned = raw.replace("\r", " ").replace("\n", " ").trim();
+        return cleaned.isEmpty() ? null : cleaned;
     }
 }
