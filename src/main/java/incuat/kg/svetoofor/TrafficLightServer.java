@@ -140,7 +140,13 @@ public class TrafficLightServer extends WebSocketServer {
      * Просто сохраняем последний сигнал без проверок времени
      */
     private void updateState(String message) {
-        switch (message) {
+        String command = message;
+        int sep = message.indexOf('|');
+        if (sep != -1) {
+            command = message.substring(0, sep);
+        }
+
+        switch (command) {
             // Красный индикатор (инциденты)
             case "RED_BLINK":
             case "GREEN_BLINK_INCIDENT":
